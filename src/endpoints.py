@@ -5,8 +5,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
-from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from invisible_playwright.async_api import Error as PlaywrightError
+from invisible_playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from src.challenge import challenge_present, solve_challenge
 from src.content import build_response_content
@@ -66,9 +66,7 @@ async def read_item(request: LinkRequest, dep: BrowserDep) -> LinkResponse:
     await setup_routes(request, dep)
 
     try:
-        challenge_detected, page_html, page_request = await _navigate_and_solve(
-            dep, request, timer
-        )
+        page_request = await _navigate_and_solve(dep, request, timer)
     except (TimeoutError, PlaywrightTimeoutError) as e:
         logger.error("Timed out while loading the page or solving the challenge")
         raise HTTPException(
@@ -82,13 +80,14 @@ async def read_item(request: LinkRequest, dep: BrowserDep) -> LinkResponse:
             detail=f"Could not reach the target: {e}",
         ) from e
 
-    cookies = await dep.context.cookies()
+    cookie_urls = [request.url]
+    if dep.page.url and dep.page.url not in cookie_urls:
+        cookie_urls.append(dep.page.url)
+    cookies = await dep.context.cookies(cookie_urls)
     content_type, response_content = await build_response_content(
         dep.page,
         request,
         page_request,
-        challenge_detected=challenge_detected,
-        page_html=page_html,
     )
 
     user_agent = (
@@ -127,22 +126,17 @@ async def _navigate_and_solve(
     dep: BrowserDep,
     request: LinkRequest,
     timer: TimeoutTimer,
-) -> tuple[bool, str | None, object]:
-    """Navigate to the URL, then solve a challenge or wait for network idle."""
-    page_html: str | None = None
+) -> object:
+    """Navigate to the URL, solve a challenge if one is up, then wait for network idle."""
     page_request = await dep.page.goto(request.url, timeout=remaining_ms(timer))
     await dep.page.wait_for_load_state(
         state="domcontentloaded", timeout=remaining_ms(timer)
     )
 
-    if not await challenge_present(dep.page):
-        page_html = await dep.page.content()
-        await _wait_for_networkidle(dep, timer)
-        return False, page_html, page_request
-
-    await solve_challenge(dep.page, timer)
+    if await challenge_present(dep.page):
+        await solve_challenge(dep.page, timer)
     await _wait_for_networkidle(dep, timer)
-    return True, page_html, page_request
+    return page_request
 
 
 async def _wait_for_networkidle(dep: BrowserDep, timer: TimeoutTimer) -> None:

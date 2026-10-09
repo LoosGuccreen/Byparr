@@ -8,19 +8,20 @@ version = "0.1.0"
 description = "API for getting cookies for Cloudflare challenges"
 readme = "README.md"
 dependencies = [
-    "fastapi[standard]==0.141.*",
-    "invisible-playwright>=0.6.1",
-    "playwright==1.62.*",
+    "fastapi[standard]==0.143.*",
+    "invisible-playwright>=0.15.0",
+    "playwright==1.63.*",
     "playwright-captcha==0.1.*",
     "pydantic==2.*",
     "pydantic-settings==2.*",
-    "trafilatura==2.2.*",
+    "trafilatura==2.3.*",
+    "tzlocal==5.*",
 ]
 urls = { repository = "https://github.com/ThePhaseless/Byparr" }
 [dependency-groups]
 
 test = [
-    "httpx2==2.12.*",
+    "httpx2==2.13.*",
     "pytest==9.1.*",
     "pytest-asyncio==1.4.*",
     "pytest-retry==1.7.*",
