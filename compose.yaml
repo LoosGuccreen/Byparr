@@ -9,10 +9,10 @@ services:
       context: .
       dockerfile: Dockerfile
       shm_size: "1gb"
-    # Recommended to offload disk operations to RAM and reduce disk wear:
+    # Offload disk operations to RAM without imposing fixed capacity limits:
     tmpfs:
-      - /tmp:exec,mode=1777,size=1G
-      - /cache:mode=1777,size=512M
+      - /tmp:exec,mode=1777
+      - /cache:mode=1777
     # Uncomment below to use byparr outside of internal network
     ports:
       - "8191:8191"
