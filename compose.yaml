@@ -10,9 +10,9 @@ services:
       dockerfile: Dockerfile
       shm_size: "1gb"
     # Offload disk operations to RAM without imposing fixed capacity limits:
-    tmpfs:
-      - /tmp:exec,mode=1777
-      - /cache:mode=1777
+    # tmpfs:
+    #  - /tmp:exec,mode=1777
+    #  - /cache:mode=1777
     # Uncomment below to use byparr outside of internal network
     ports:
       - "8191:8191"
