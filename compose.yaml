@@ -1,6 +1,7 @@
 services:
   byparr:
     image: ghcr.io/thephaseless/byparr:latest
+    container_name: byparr
     restart: unless-stopped
     # environment:
     #   LOG_LEVEL: debug
@@ -13,5 +14,5 @@ services:
     tmpfs:
       - /tmp:exec,mode=1777,size=1G
     # Uncomment below to use byparr outside of internal network
-    # ports:
-    #   - "8191:8191"
+    ports:
+      - "8191:8191"
